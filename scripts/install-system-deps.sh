@@ -13,7 +13,11 @@ case "$(uname -s)" in
       command -v sudo >/dev/null || { echo "sudo is required for system packages." >&2; exit 1; }
       elevate=(sudo)
     fi
-    "${elevate[@]}" apt-get update
+    apt_update=("${elevate[@]}" apt-get -o Acquire::Retries=3 -o APT::Update::Error-Mode=any update)
+    if ! "${apt_update[@]}"; then
+      "${elevate[@]}" rm -rf /var/lib/apt/lists/*
+      "${apt_update[@]}"
+    fi
     "${elevate[@]}" apt-get install -y --no-install-recommends \
       build-essential gfortran git python3 python3-venv python3-dev \
       libopenmpi-dev openmpi-bin libhdf5-dev libopenblas-dev \
